@@ -7,6 +7,7 @@ import { ThemeProvider } from "next-themes";
 import ProtectedRoute from "./components/layout/ProtectedRoute";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
+import Canal from "./pages/Canal";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,11 @@ const App = () => (
             <Route path="/" element={
               <ProtectedRoute>
                 <Index />
+              </ProtectedRoute>
+            } />
+            <Route path="/canal/:id" element={
+              <ProtectedRoute>
+                <Canal />
               </ProtectedRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

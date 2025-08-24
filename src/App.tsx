@@ -8,6 +8,9 @@ import ProtectedRoute from "./components/layout/ProtectedRoute";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Canal from "./pages/Canal";
+import EditProject from "./pages/EditProject";
+import CreateScene from "./pages/CreateScene";
+import VideoPage from "./pages/VideoPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +37,21 @@ const App = () => (
             <Route path="/canal/:id" element={
               <ProtectedRoute>
                 <Canal />
+              </ProtectedRoute>
+            } />
+            <Route path="/canal/:id/edit/:videoId" element={
+              <ProtectedRoute>
+                <EditProject />
+              </ProtectedRoute>
+            } />
+            <Route path="/canal/:id/create/:videoId/:sceneId" element={
+              <ProtectedRoute>
+                <CreateScene />
+              </ProtectedRoute>
+            } />
+            <Route path="/video/:id" element={
+              <ProtectedRoute>
+                <VideoPage />
               </ProtectedRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

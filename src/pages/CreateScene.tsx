@@ -16,7 +16,8 @@ import {
   Trash2, 
   Check, 
   RotateCcw,
-  Play
+  Play,
+  X
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
@@ -41,7 +42,11 @@ const CreateScene = () => {
   const [persistVideos, setPersistVideos] = useState(false);
   const [newImageUrl, setNewImageUrl] = useState('');
   const [persistImages, setPersistImages] = useState(false);
-  const [videoUrls, setVideoUrls] = useState<string[]>([]);
+  const [videoUrls, setVideoUrls] = useState<string[]>([
+    'https://drive.google.com/file/d/demo123/view',
+    'https://drive.google.com/file/d/demo456/view',
+    'https://drive.google.com/file/d/demo789/view'
+  ]);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [cutStartTime, setCutStartTime] = useState('');
   const [cutEndTime, setCutEndTime] = useState('');
@@ -61,15 +66,10 @@ const CreateScene = () => {
         setSpeaker2(dialogue.speaker2?.text_speaker || '');
         setSpeaker3(dialogue.speaker3?.text_speaker || '');
       }
-
-      const videoSources = scene.video_sources?.map(vs => vs.url) || [];
-      setVideoUrls(videoSources);
-      if (videoSources.length > 0) {
-        setSelectedVideoUrl(videoSources[0]);
+      
+      if (scene.video_sources?.length > 0) {
+        setSelectedVideoUrl(scene.video_sources[0].url);
       }
-
-      const attachmentUrls = scene.attachments?.filter(a => a.type === 'image').map(a => a.url) || [];
-      setImageUrls(attachmentUrls);
     }
   }, [scene]);
 
@@ -79,21 +79,32 @@ const CreateScene = () => {
 
   const addVideoUrl = () => {
     if (newVideoUrl.trim()) {
-      const updatedUrls = [...videoUrls, newVideoUrl.trim()];
-      setVideoUrls(updatedUrls);
+      setVideoUrls([...videoUrls, newVideoUrl.trim()]);
       setNewVideoUrl('');
-      
-      if (!selectedVideoUrl) {
-        setSelectedVideoUrl(updatedUrls[0]);
-      }
+      toast({
+        title: "URL agregada",
+        description: "La URL de video se ha agregado correctamente"
+      });
     }
+  };
+
+  const removeVideoUrl = (index: number) => {
+    setVideoUrls(videoUrls.filter((_, i) => i !== index));
   };
 
   const addImageUrl = () => {
     if (newImageUrl.trim()) {
       setImageUrls([...imageUrls, newImageUrl.trim()]);
       setNewImageUrl('');
+      toast({
+        title: "Imagen agregada",
+        description: "La URL de imagen se ha agregado correctamente"
+      });
     }
+  };
+
+  const removeImageUrl = (index: number) => {
+    setImageUrls(imageUrls.filter((_, i) => i !== index));
   };
 
   const handleSave = () => {
@@ -107,18 +118,33 @@ const CreateScene = () => {
         end_prompt: endPrompt
       },
       dialogues: [{
-        speaker1: speaker1 ? { voice_type: 'voz_masculina_profunda', text_speaker: speaker1 } : undefined,
-        speaker2: speaker2 ? { voice_type: 'voz_masculina_profunda', text_speaker: speaker2 } : undefined,
-        speaker3: speaker3 ? { voice_type: 'voz_masculina_profunda', text_speaker: speaker3 } : undefined
-      }],
-      video_sources: videoUrls.map((url, index) => ({
-        id: `clip${index + 1}`,
-        url,
+        ...(speaker1 && {
+          speaker1: {
+            voice_type: 'voz_masculina_profunda',
+            text_speaker: speaker1
+          }
+        }),
+        ...(speaker2 && {
+          speaker2: {
+            voice_type: 'voz_femenina_clara',
+            text_speaker: speaker2
+          }
+        }),
+        ...(speaker3 && {
+          speaker3: {
+            voice_type: 'voz_masculina_joven',
+            text_speaker: speaker3
+          }
+        })
+      }].filter(dialogue => Object.keys(dialogue).length > 0),
+      video_sources: selectedVideoUrl ? [{
+        id: 'clip1',
+        url: selectedVideoUrl,
         cuts: cutStartTime && cutEndTime ? [{
-          part: 'part1',
+          part: 'main',
           time_range: `${cutStartTime}-${cutEndTime}`
         }] : []
-      })),
+      }] : [],
       attachments: imageUrls.map((url, index) => ({
         type: 'image',
         url,
@@ -159,17 +185,28 @@ const CreateScene = () => {
         }
       }
       
-      setNewVideoUrl('');
-      setNewImageUrl('');
+      setVideoUrls([
+        'https://drive.google.com/file/d/demo123/view',
+        'https://drive.google.com/file/d/demo456/view',
+        'https://drive.google.com/file/d/demo789/view'
+      ]);
+      setImageUrls([]);
       setCutStartTime('');
       setCutEndTime('');
+      setNewVideoUrl('');
+      setNewImageUrl('');
+      
+      toast({
+        title: "Escena reseteada",
+        description: "Todos los cambios han sido descartados"
+      });
     }
   };
 
   if (!project || !scene) {
     return (
       <div className="min-h-screen bg-background">
-        <Header />
+        <Header showBackButton onBack={handleBack} />
         <main className="container mx-auto px-4 py-6">
           <div className="text-center py-12">
             <h1 className="text-2xl font-bold mb-4">Escena no encontrada</h1>
@@ -182,232 +219,297 @@ const CreateScene = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <Header showBackButton onBack={handleBack} />
       
       <main className="container mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-8rem)]">
+        <div className="flex gap-6 h-[calc(100vh-120px)]">
           {/* Video Player - 70% */}
-          <div className="lg:col-span-2 space-y-4">
-            <div className="space-y-2">
-              <Label>Selector de Video</Label>
+          <div className="flex-1 space-y-4">
+            <div>
+              <Label className="text-lg font-semibold">Selector de Video</Label>
               <Select value={selectedVideoUrl} onValueChange={setSelectedVideoUrl}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona un video" />
+                <SelectTrigger className="w-full mt-2">
+                  <SelectValue placeholder="Selecciona un video de Google Drive" />
                 </SelectTrigger>
                 <SelectContent>
                   {videoUrls.map((url, index) => (
                     <SelectItem key={index} value={url}>
-                      Video {index + 1}
+                      {url.includes('demo123') ? 'Tutorial React - Introducción' : 
+                       url.includes('demo456') ? 'Tutorial React - Hooks' : 
+                       url.includes('demo789') ? 'Tutorial React - Estado' : 
+                       `Video personalizado ${index + 1}`}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
-            {/* Video Player Container */}
-            <div className="bg-black rounded-lg aspect-video flex items-center justify-center">
+            {/* Google Drive Video Player Mockup */}
+            <div className="aspect-video bg-gradient-to-br from-slate-900 to-slate-800 rounded-lg flex items-center justify-center border">
               {selectedVideoUrl ? (
-                <iframe
-                  src={selectedVideoUrl.replace('/view?usp=sharing', '/preview')}
-                  className="w-full h-full rounded-lg"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
+                <div className="w-full h-full flex items-center justify-center">
+                  <div className="text-center text-white space-y-2">
+                    <div className="w-20 h-20 mx-auto bg-red-600 rounded-full flex items-center justify-center mb-4">
+                      <Play className="h-8 w-8 text-white ml-1" />
+                    </div>
+                    <p className="text-lg font-medium">Google Drive Player</p>
+                    <p className="text-sm opacity-75">
+                      Reproduciendo: {selectedVideoUrl.includes('demo123') ? 'Tutorial React - Introducción' : 
+                        selectedVideoUrl.includes('demo456') ? 'Tutorial React - Hooks' : 
+                        selectedVideoUrl.includes('demo789') ? 'Tutorial React - Estado' : 'Video personalizado'}
+                    </p>
+                    <div className="mt-4 flex items-center justify-center space-x-4 text-sm">
+                      <span>00:12 / 05:43</span>
+                      <div className="w-32 h-1 bg-gray-600 rounded">
+                        <div className="w-8 h-1 bg-red-500 rounded"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               ) : (
-                <div className="text-white flex flex-col items-center space-y-4">
-                  <Play className="h-16 w-16" />
-                  <p>Selecciona un video para reproducir</p>
+                <div className="text-center text-gray-400">
+                  <Play className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                  <p className="text-sm">Selecciona un video para reproducir</p>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Controls Panel - 30% */}
-          <div className="space-y-4">
-            <ScrollArea className="h-[calc(100vh-10rem)]">
-              <div className="space-y-6 pr-4">
-                {/* Scene Info */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Información de Escena</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <Label>ID de Escena</Label>
-                      <Input value={scene.id} disabled />
-                    </div>
+          {/* Side Panel - 30% */}
+          <ScrollArea className="w-96 h-full">
+            <div className="space-y-6 pr-4">
+              {/* Scene Info */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Información de la Escena</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label className="text-sm font-medium">ID de Escena</Label>
+                    <p className="text-sm text-muted-foreground mt-1">#{scene.id}</p>
+                  </div>
+                  
+                  <div>
+                    <Label className="text-sm font-medium">Tiempo de inicio - fin</Label>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {String(Math.floor((scene.id - 1) * 20 / 60)).padStart(2, '0')}:
+                      {String((scene.id - 1) * 20 % 60).padStart(2, '0')} - 
+                      {String(Math.floor(scene.id * 20 / 60)).padStart(2, '0')}:
+                      {String(scene.id * 20 % 60).padStart(2, '0')}
+                    </p>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="description">Descripción de la escena</Label>
+                    <Textarea
+                      id="description"
+                      value={sceneDescription}
+                      onChange={(e) => setSceneDescription(e.target.value)}
+                      placeholder="Describe lo que sucede en esta escena..."
+                      className="mt-1"
+                    />
+                  </div>
+
+                  <Separator />
+                  
+                  <div className="space-y-3">
+                    <Label className="text-sm font-medium">Diálogos de locutores</Label>
                     
                     <div>
-                      <Label>Descripción</Label>
+                      <Label htmlFor="speaker1" className="text-xs text-muted-foreground">Locutor 1</Label>
                       <Textarea
-                        value={sceneDescription}
-                        onChange={(e) => setSceneDescription(e.target.value)}
-                        placeholder="Descripción de la escena"
-                      />
-                    </div>
-
-                    <div>
-                      <Label>Prompt Inicial</Label>
-                      <Textarea
-                        value={startPrompt}
-                        onChange={(e) => setStartPrompt(e.target.value)}
-                        placeholder="Prompt para imagen inicial"
-                      />
-                    </div>
-
-                    <div>
-                      <Label>Prompt Final</Label>
-                      <Textarea
-                        value={endPrompt}
-                        onChange={(e) => setEndPrompt(e.target.value)}
-                        placeholder="Prompt para imagen final"
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Dialogues */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Diálogos</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <Label>Locutor 1</Label>
-                      <Textarea
+                        id="speaker1"
                         value={speaker1}
                         onChange={(e) => setSpeaker1(e.target.value)}
-                        placeholder="Texto del locutor 1"
+                        placeholder="Texto del locutor 1..."
+                        className="mt-1"
                       />
                     </div>
 
                     <div>
-                      <Label>Locutor 2</Label>
+                      <Label htmlFor="speaker2" className="text-xs text-muted-foreground">Locutor 2</Label>
                       <Textarea
+                        id="speaker2"
                         value={speaker2}
                         onChange={(e) => setSpeaker2(e.target.value)}
-                        placeholder="Texto del locutor 2"
+                        placeholder="Texto del locutor 2 (opcional)..."
+                        className="mt-1"
                       />
                     </div>
 
                     <div>
-                      <Label>Locutor 3</Label>
+                      <Label htmlFor="speaker3" className="text-xs text-muted-foreground">Locutor 3</Label>
                       <Textarea
+                        id="speaker3"
                         value={speaker3}
                         onChange={(e) => setSpeaker3(e.target.value)}
-                        placeholder="Texto del locutor 3"
+                        placeholder="Texto del locutor 3 (opcional)..."
+                        className="mt-1"
                       />
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </CardContent>
+              </Card>
 
-                {/* Video URLs */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">URLs de Video</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex space-x-2">
-                      <Input
-                        value={newVideoUrl}
-                        onChange={(e) => setNewVideoUrl(e.target.value)}
-                        placeholder="URL de Google Drive"
-                        onKeyPress={(e) => e.key === 'Enter' && addVideoUrl()}
-                      />
-                      <Button onClick={addVideoUrl} size="sm">
-                        <Plus className="h-4 w-4" />
+              {/* Video URLs */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm">URLs de Videos</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex space-x-2">
+                    <Input
+                      value={newVideoUrl}
+                      onChange={(e) => setNewVideoUrl(e.target.value)}
+                      placeholder="https://drive.google.com/..."
+                      className="flex-1"
+                    />
+                    <Button size="sm" onClick={addVideoUrl}>
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="persist-videos"
+                      checked={persistVideos}
+                      onCheckedChange={(checked) => setPersistVideos(!!checked)}
+                    />
+                    <Label htmlFor="persist-videos" className="text-xs">Persistir entre escenas</Label>
+                  </div>
+
+                  {videoUrls.map((url, index) => (
+                    <div key={index} className="flex items-center space-x-2 text-xs">
+                      <span className="flex-1 truncate">{url}</span>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => removeVideoUrl(index)}
+                        className="h-6 w-6 p-0"
+                      >
+                        <X className="h-3 w-3" />
                       </Button>
                     </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        checked={persistVideos}
-                        onCheckedChange={(checked) => setPersistVideos(!!checked)}
-                      />
-                      <Label className="text-sm">Persistir entre escenas</Label>
-                    </div>
+                  ))}
+                </CardContent>
+              </Card>
 
-                    {videoUrls.length > 0 && (
-                      <div className="space-y-2">
-                        <Label className="text-sm text-muted-foreground">Videos agregados:</Label>
-                        {videoUrls.map((url, index) => (
-                          <div key={index} className="text-sm p-2 bg-muted rounded text-ellipsis overflow-hidden">
-                            Video {index + 1}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+              {/* Image URLs */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm">URLs de Imágenes</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div>
+                    <Label className="text-xs">Imagen inicial</Label>
+                    <Textarea
+                      value={startPrompt}
+                      onChange={(e) => setStartPrompt(e.target.value)}
+                      placeholder="Prompt para imagen inicial..."
+                      className="mt-1"
+                    />
+                  </div>
 
-                {/* Image URLs */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">URLs de Imágenes</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex space-x-2">
-                      <Input
-                        value={newImageUrl}
-                        onChange={(e) => setNewImageUrl(e.target.value)}
-                        placeholder="URL de imagen"
-                        onKeyPress={(e) => e.key === 'Enter' && addImageUrl()}
-                      />
-                      <Button onClick={addImageUrl} size="sm">
-                        <Plus className="h-4 w-4" />
+                  <div>
+                    <Label className="text-xs">Imagen final</Label>
+                    <Textarea
+                      value={endPrompt}
+                      onChange={(e) => setEndPrompt(e.target.value)}
+                      placeholder="Prompt para imagen final..."
+                      className="mt-1"
+                    />
+                  </div>
+
+                  <Separator />
+
+                  <div className="flex space-x-2">
+                    <Input
+                      value={newImageUrl}
+                      onChange={(e) => setNewImageUrl(e.target.value)}
+                      placeholder="URL de imagen adicional..."
+                      className="flex-1"
+                    />
+                    <Button size="sm" onClick={addImageUrl}>
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="persist-images"
+                      checked={persistImages}
+                      onCheckedChange={(checked) => setPersistImages(!!checked)}
+                    />
+                    <Label htmlFor="persist-images" className="text-xs">Persistir entre escenas</Label>
+                  </div>
+
+                  {imageUrls.map((url, index) => (
+                    <div key={index} className="flex items-center space-x-2 text-xs">
+                      <span className="flex-1 truncate">{url}</span>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => removeImageUrl(index)}
+                        className="h-6 w-6 p-0"
+                      >
+                        <X className="h-3 w-3" />
                       </Button>
                     </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        checked={persistImages}
-                        onCheckedChange={(checked) => setPersistImages(!!checked)}
-                      />
-                      <Label className="text-sm">Persistir entre escenas</Label>
-                    </div>
-                  </CardContent>
-                </Card>
+                  ))}
+                </CardContent>
+              </Card>
 
-                {/* Time Cuts */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Cortes de Tiempo</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <Label>Inicio</Label>
-                        <Input
-                          value={cutStartTime}
-                          onChange={(e) => setCutStartTime(e.target.value)}
-                          placeholder="00:00"
-                        />
-                      </div>
-                      <div>
-                        <Label>Final</Label>
-                        <Input
-                          value={cutEndTime}
-                          onChange={(e) => setCutEndTime(e.target.value)}
-                          placeholder="00:30"
-                        />
-                      </div>
+              {/* Cut Times */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm">Tiempos de Corte</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <Label htmlFor="cut-start" className="text-xs">Inicio</Label>
+                      <Input
+                        id="cut-start"
+                        value={cutStartTime}
+                        onChange={(e) => setCutStartTime(e.target.value)}
+                        placeholder="00:00"
+                        className="mt-1"
+                      />
                     </div>
-                  </CardContent>
-                </Card>
+                    <div>
+                      <Label htmlFor="cut-end" className="text-xs">Fin</Label>
+                      <Input
+                        id="cut-end"
+                        value={cutEndTime}
+                        onChange={(e) => setCutEndTime(e.target.value)}
+                        placeholder="00:30"
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Action Buttons */}
+              <div className="flex space-x-2 pt-4">
+                <Button 
+                  onClick={handleSave}
+                  className="flex-1 bg-gradient-to-r from-primary to-accent text-white"
+                >
+                  <Check className="h-4 w-4 mr-2" />
+                  Guardar
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={handleReset}
+                  className="flex-1"
+                >
+                  <RotateCcw className="h-4 w-4 mr-2" />
+                  Reset
+                </Button>
               </div>
-            </ScrollArea>
-
-            {/* Action Buttons */}
-            <div className="flex space-x-2 pt-4 border-t">
-              <Button onClick={handleSave} className="flex-1">
-                <Check className="h-4 w-4 mr-2" />
-                Guardar
-              </Button>
-              <Button onClick={handleReset} variant="outline">
-                <RotateCcw className="h-4 w-4" />
-              </Button>
             </div>
-          </div>
+          </ScrollArea>
         </div>
       </main>
     </div>

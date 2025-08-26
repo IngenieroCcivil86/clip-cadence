@@ -85,7 +85,7 @@ interface AppState {
   currentPage: number;
   
   // Actions
-  login: (email: string, password: string) => boolean;
+  login: () => boolean;
   logout: () => void;
   
   // Channel actions
@@ -135,7 +135,76 @@ export const useAppStore = create<AppState>()(
         }
       ],
       selectedChannel: null,
-      videoProjects: [],
+      videoProjects: [
+        {
+          id: 'project_demo_001',
+          title: 'Video Tutorial: React Avanzado',
+          description: 'Tutorial completo sobre React 19 y sus nuevas funcionalidades',
+          canal_id: 'canal_demo_001',
+          created_at: new Date().toISOString(),
+          scenes: [
+            {
+              id: 1,
+              status: 'success',
+              scene_description: 'Introducción al curso de React 19',
+              image_prompts: {
+                start_prompt: 'Modern developer workspace with React logo',
+                end_prompt: 'Code editor showing React 19 features'
+              },
+              dialogues: [{
+                speaker1: {
+                  voice_type: 'voz_masculina_profunda',
+                  text_speaker: 'Bienvenidos a este tutorial completo sobre React 19, donde aprenderemos las nuevas funcionalidades y mejores prácticas.'
+                }
+              }],
+              video_sources: [{
+                id: 'clip1',
+                url: 'https://drive.google.com/file/d/demo123/view',
+                cuts: [{ part: 'intro', time_range: '00:00-00:30' }]
+              }],
+              attachments: []
+            },
+            {
+              id: 2,
+              status: 'pending',
+              scene_description: 'Configuración del entorno de desarrollo',
+              image_prompts: {
+                start_prompt: 'Clean terminal showing npm install commands',
+                end_prompt: 'VS Code with React project structure'
+              },
+              dialogues: [{
+                speaker1: {
+                  voice_type: 'voz_masculina_profunda',
+                  text_speaker: 'Comenzamos configurando nuestro entorno de desarrollo con las últimas herramientas.'
+                }
+              }],
+              video_sources: [],
+              attachments: []
+            },
+            {
+              id: 3,
+              status: 'idle',
+              scene_description: 'Primeros pasos con componentes',
+              image_prompts: {
+                start_prompt: 'Simple React component code',
+                end_prompt: 'Rendered component in browser'
+              },
+              dialogues: [{
+                speaker1: {
+                  voice_type: 'voz_femenina_clara',
+                  text_speaker: 'Ahora veremos cómo crear nuestros primeros componentes funcionales.'
+                },
+                speaker2: {
+                  voice_type: 'voz_masculina_profunda',
+                  text_speaker: 'Recuerden que los hooks son fundamentales en React moderno.'
+                }
+              }],
+              video_sources: [],
+              attachments: []
+            }
+          ]
+        }
+      ],
       selectedProject: null,
       selectedScene: null,
       viewMode: 'grid',
@@ -144,17 +213,13 @@ export const useAppStore = create<AppState>()(
       selectedLanguage: '',
       currentPage: 1,
 
-      // Authentication actions
-      login: (email: string, password: string) => {
-        // Simple authentication for now
-        if (email === 'angel' && password === 'ingeniero89') {
-          set({ 
-            isAuthenticated: true, 
-            user: { email: 'angel@example.com' } 
-          });
-          return true;
-        }
-        return false;
+      // Authentication actions - simplified for UI only
+      login: () => {
+        set({ 
+          isAuthenticated: true, 
+          user: { email: 'demo@google.com' } 
+        });
+        return true;
       },
 
       logout: () => {

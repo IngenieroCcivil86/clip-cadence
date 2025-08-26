@@ -132,6 +132,30 @@ export const useAppStore = create<AppState>()(
           api_key: 'demo_api_key_123',
           idioma: 'ES',
           fecha_creacion: new Date().toISOString()
+        },
+        {
+          id: 'canal_demo_002',
+          imagen1: heroVideoStudio,
+          imagen2: techNewsAvatar,
+          titulo: 'Gaming Zone',
+          gmail: 'gaming@example.com',
+          descripcion: 'Los mejores reviews y gameplays de videojuegos',
+          categorias: 'Gaming',
+          api_key: 'demo_api_key_456',
+          idioma: 'ES',
+          fecha_creacion: new Date().toISOString()
+        },
+        {
+          id: 'canal_demo_003',
+          imagen1: heroVideoStudio,
+          imagen2: techNewsAvatar,
+          titulo: 'Cooking Masters',
+          gmail: 'cooking@example.com',
+          descripcion: 'Recetas deliciosas y técnicas culinarias profesionales',
+          categorias: 'Cocina',
+          api_key: 'demo_api_key_789',
+          idioma: 'ES',
+          fecha_creacion: new Date().toISOString()
         }
       ],
       selectedChannel: null,
@@ -197,6 +221,75 @@ export const useAppStore = create<AppState>()(
                 speaker2: {
                   voice_type: 'voz_masculina_profunda',
                   text_speaker: 'Recuerden que los hooks son fundamentales en React moderno.'
+                }
+              }],
+              video_sources: [],
+              attachments: []
+            }
+          ]
+        },
+        {
+          id: 'project_demo_002',
+          title: 'Gameplay: Cyberpunk 2077',
+          description: 'Explorando Night City en la nueva expansión',
+          canal_id: 'canal_demo_002',
+          created_at: new Date().toISOString(),
+          scenes: [
+            {
+              id: 1,
+              status: 'success',
+              scene_description: 'Intro del gameplay',
+              image_prompts: {
+                start_prompt: 'Cyberpunk 2077 main menu',
+                end_prompt: 'Character customization screen'
+              },
+              dialogues: [{
+                speaker1: {
+                  voice_type: 'voz_masculina_joven',
+                  text_speaker: '¡Hola gamers! Hoy exploramos las nuevas zonas de Night City.'
+                }
+              }],
+              video_sources: [],
+              attachments: []
+            }
+          ]
+        },
+        {
+          id: 'project_demo_003',
+          title: 'Receta: Pasta Carbonara',
+          description: 'La auténtica receta italiana paso a paso',
+          canal_id: 'canal_demo_003',
+          created_at: new Date().toISOString(),
+          scenes: [
+            {
+              id: 1,
+              status: 'idle',
+              scene_description: 'Presentación de ingredientes',
+              image_prompts: {
+                start_prompt: 'Fresh pasta ingredients on wooden table',
+                end_prompt: 'All ingredients neatly arranged'
+              },
+              dialogues: [{
+                speaker1: {
+                  voice_type: 'voz_femenina_clara',
+                  text_speaker: 'Bienvenidos a Cooking Masters, hoy preparemos una auténtica carbonara.'
+                }
+              }],
+              video_sources: [],
+              attachments: []
+            },
+            {
+              id: 2,
+              status: 'pending',
+              scene_description: 'Proceso de cocción',
+              image_prompts: {
+                start_prompt: 'Boiling water with pasta',
+                end_prompt: 'Perfect al dente pasta'
+              },
+              dialogues: [{
+                speaker1: {
+                  voice_type: 'voz_femenina_clara',
+                  text_speaker: 'El secreto está en el timing perfecto de la cocción.'
                 }
               }],
               video_sources: [],
@@ -290,7 +383,7 @@ export const useAppStore = create<AppState>()(
       deleteVideoProject: (id) => {
         set((state) => ({
           videoProjects: state.videoProjects.filter((project) => project.id !== id),
-          selectedProject: state.selectedProject?.id === id ? null : state.selectedProject,
+          selectedChannel: state.selectedChannel?.id === id ? null : state.selectedChannel,
         }));
       },
 

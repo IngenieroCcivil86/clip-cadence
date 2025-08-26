@@ -8,7 +8,7 @@ import { Play } from 'lucide-react';
 const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { isAuthenticated } = useAppStore();
+  const { isAuthenticated, login } = useAppStore();
 
   if (isAuthenticated) {
     return <Navigate to="/" replace />;
@@ -18,6 +18,7 @@ const Login = () => {
     setIsLoading(true);
     // Simulate Google login process
     await new Promise(resolve => setTimeout(resolve, 1000));
+    login(); // Call the login function from store
     navigate('/');
     setIsLoading(false);
   };
